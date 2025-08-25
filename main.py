@@ -104,9 +104,11 @@ async def superset_lifespan(server: FastMCP) -> AsyncIterator[SupersetContext]:
     # Create HTTP client
     client = httpx.AsyncClient(base_url=SUPERSET_BASE_URL, timeout=30.0)
 
+    logger.info("client is setup")
     # Create context
     ctx = SupersetContext(client=client, base_url=SUPERSET_BASE_URL, app=app)
 
+    logger.info("context created")
     # Try to load existing token
     stored_token = load_stored_token()
     if stored_token:
@@ -661,6 +663,7 @@ async def superset_chart_get_by_id(ctx: Context, chart_id: int) -> Dict[str, Any
 @handle_api_errors
 async def superset_chart_create(
     ctx: Context,
+    dashboards: List[int],
     slice_name: str,
     datasource_id: int,
     datasource_type: str,
@@ -673,6 +676,7 @@ async def superset_chart_create(
     Makes a request to the /api/v1/chart/ POST endpoint to create a new visualization.
 
     Args:
+        dashboards: List of dashboard id to put the chart into
         slice_name: Name/title of the chart
         datasource_id: ID of the dataset or SQL table
         datasource_type: Type of datasource ('table' for datasets, 'query' for SQL)
@@ -683,6 +687,7 @@ async def superset_chart_create(
         A dictionary with the created chart information including its ID
     """
     payload = {
+        "dashboards": dashboards,
         "slice_name": slice_name,
         "datasource_id": datasource_id,
         "datasource_type": datasource_type,
